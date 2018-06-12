@@ -1,0 +1,11 @@
+== Spring Cloud Scheduler 
+
+The Spring Cloud Scheduler kubernetes project allows a Java application schedule CronJobs on Kubernetes
+
+=== Building
+
+Clone the repo and type
+
+----
+$ ./mvnw clean install
+----
