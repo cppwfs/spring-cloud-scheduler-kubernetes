@@ -4,8 +4,10 @@ The Spring Cloud Scheduler kubernetes project allows a Java application schedule
 
 === Building
 
-Clone the repo and type
+Clone the repo and type.
 
 ----
 $ ./mvnw clean install
 ----
+
+You will need an instance of MiniKube that is running locally with Kubernetes version 1.10 or higher.
