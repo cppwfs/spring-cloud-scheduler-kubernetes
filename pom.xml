@@ -89,10 +89,24 @@
 		<dependency>
 			<groupId>org.assertj</groupId>
 			<artifactId>assertj-core</artifactId>
-			<!-- use 2.9.1 for Java 7 projects -->
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
 
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>animal-sniffer-maven-plugin</artifactId>
+				<configuration>
+					<signature>
+						<groupId>org.codehaus.mojo.signature</groupId>
+						<artifactId>java18</artifactId>
+						<version>1.0</version>
+					</signature>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
 
 </project>

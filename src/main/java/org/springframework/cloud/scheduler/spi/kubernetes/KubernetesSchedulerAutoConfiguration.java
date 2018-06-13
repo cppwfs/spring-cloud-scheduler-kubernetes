@@ -23,18 +23,22 @@ import io.kubernetes.client.apis.BatchV1beta1Api;
 import io.kubernetes.client.apis.CoreV1Api;
 import io.kubernetes.client.util.Config;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * Creates a {@link KubernetesAppScheduler}.
+ * Creates a {@link KubernetesScheduler}.
  *
  * @author Glenn Renfro
  */
 @Configuration
+@EnableConfigurationProperties
 public class KubernetesSchedulerAutoConfiguration {
 
 	@Bean
+	@ConditionalOnMissingBean
 	public BatchV1beta1Api api() {
 		try {
 			ApiClient client = Config.defaultClient();
@@ -47,6 +51,7 @@ public class KubernetesSchedulerAutoConfiguration {
 	}
 
 	@Bean
+	@ConditionalOnMissingBean
 	public CoreV1Api coreV1Api() {
 		try {
 			ApiClient client = Config.defaultClient();
@@ -59,7 +64,15 @@ public class KubernetesSchedulerAutoConfiguration {
 	}
 
 	@Bean
-	public KubernetesAppScheduler scheduler(BatchV1beta1Api batchV1beta1Api) {
-		return new KubernetesAppScheduler(batchV1beta1Api);
+	@ConditionalOnMissingBean
+	public KubernetesScheduler scheduler(BatchV1beta1Api batchV1beta1Api,
+			KubernetesSchedulerProperties properties) {
+		return new KubernetesScheduler(batchV1beta1Api, properties);
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	public KubernetesSchedulerProperties cloudFoundrySchedulerProperties() {
+		return new KubernetesSchedulerProperties();
 	}
 }

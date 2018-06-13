@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 import io.kubernetes.client.ApiException;
@@ -29,9 +28,7 @@ import io.kubernetes.client.models.V1Service;
 import io.kubernetes.client.models.V1ServiceList;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TestName;
 import org.junit.runner.RunWith;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -60,6 +57,8 @@ public class SchedulerIntegrationTests {
 
 	private String mySqlClusterIP;
 
+	private int port;
+
 	private List<String> jobsToRemove;
 
 	@Before
@@ -67,11 +66,14 @@ public class SchedulerIntegrationTests {
 		jobsToRemove = new ArrayList<>();
 		try {
 			V1ServiceList list = coreAPI.listNamespacedService("default", "true", null, null, null, null, null, null, null, null);
+			// mySqlClusterIP is here for demo purposes.  Once integration tests need to be made real
+			//then this can be removed.
 			List<V1Service> mysqlServiceList = list.getItems().stream()
 					.filter(item -> item.getMetadata().getName().equals("mysql"))
 					.collect(Collectors.toList());
 			assertThat(mysqlServiceList.size()).isEqualTo(1);
 			this.mySqlClusterIP = mysqlServiceList.get(0).getSpec().getClusterIP();
+			this.port = mysqlServiceList.get(0).getSpec().getPorts().get(0).getPort();
 		}
 		catch (ApiException e) {
 			e.printStackTrace();
@@ -84,14 +86,11 @@ public class SchedulerIntegrationTests {
 		unscheduleTasks();
 	}
 
-	@Rule
-	public TestName name = new TestName();
-
 	@Test
 	public void createSingleJob() throws Exception {
 		ScheduleRequest request = getRequest("testschedulesingleJob");
 		scheduler.schedule(request);
-		Thread.sleep(100000);
+//		Thread.sleep(100000); //here to pause before delete so that users can see a task get triggered
 		List<ScheduleInfo> schedules = scheduler.list();
 		assertThat(schedules.size()).isEqualTo(1);
 		assertThat(schedules.get(0).getScheduleName()).isEqualTo(request.getScheduleName().toLowerCase());
@@ -166,14 +165,12 @@ public class SchedulerIntegrationTests {
 		});
 	}
 
-	private String randomName() {
-		return name.getMethodName() + "-" + UUID.randomUUID().toString();
-	}
-
+	// This can be removed when implementing final integration tests.  It is here
+	// so that users can view a running task that updates a real DB.
 	private List<String> getDbCommandLineArgs() {
 		List<String> commandLineArgs = new ArrayList<>(5);
 		commandLineArgs.add("--spring.datasource.username=root");
-		commandLineArgs.add("--spring.datasource.url=jdbc:mysql://" + this.mySqlClusterIP + ":3306/mysql");
+		commandLineArgs.add("--spring.datasource.url=jdbc:mysql://" + this.mySqlClusterIP + ":" + this.port + "/mysql");
 		commandLineArgs.add("--spring.cloud.task.name=tstamp1");
 		commandLineArgs.add("--spring.datasource.driverClassName=org.mariadb.jdbc.Driver");
 		commandLineArgs.add("--spring.datasource.password=yourpassword");
